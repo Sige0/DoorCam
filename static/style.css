@@ -1,0 +1,21 @@
+a {
+    color: #8ab4f8;
+}
+
+.login {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 260px;
+    margin: 40px auto;
+}
+
+.login input,
+.login button {
+    padding: 8px;
+    font-size: 16px;
+}
+
+.error {
+    color: #f28b82;
+}
