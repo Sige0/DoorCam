@@ -8,7 +8,7 @@ from flask_login import login_required
 from auth import bp as auth_bp, login_manager
 from camera import Camera
 
-load_dotenv()
+load_dotenv(override=True)  # .env wins over old terminal variables
 
 secret = os.getenv("SECRET_KEY")
 if not secret or secret == "change-me":
@@ -35,6 +35,13 @@ def generate_frames():
         yield (b"--frame\r\n"
                b"Content-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n")
         time.sleep(1 / 15)  # ~15 fps is enough
+
+
+@app.after_request
+def security_headers(response):
+    response.headers["X-Frame-Options"] = "DENY"  # no embedding in other sites
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @app.route("/")

@@ -10,3 +10,6 @@ Verwendetes Werkzeug: Claude Code (Claude Opus 5.5) in VS Code
 | 12.11.2026 | Nächster Schritt: Livestream | Code für app.py (MJPEG-Stream), templates/index.html und static/style.css vorgeschlagen und erklärt | |
 | 12.11.2026 | Nächster Schritt: Login | Fehler gefunden (static-Ordner am falschen Ort), Code für auth.py, login.html, Anpassungen app.py/CSS vorgeschlagen, Befehle für SECRET_KEY und Passwort-Hash gezeigt | |
 | 12.11.2026 | Pushen | snapshot.jpg aus Git entfernt und in .gitignore ergänzt, Commit und Push ausgeführt | |
+| 13.11.2026 | Repo anschauen und nächste Schritte vorschlagen | Stand analysiert, Fehler gefunden (CSS-Regeln beim Verschieben verloren, kein Logout-Link, HOST fehlt in .env.example), Plan für KW47 vorgeschlagen | |
+| 13.11.2026 | Gefundene Fehler beheben, Design verbessern, Sicherheit prüfen | style.css neu gestaltet (dunkel, passt sich der Bildschirmgrösse an), Kopfzeile mit Logout in index.html, login.html angepasst, HOST in .env.example, Logout nur noch per POST, 1 s Wartezeit bei falschem Login, Sicherheits-Header in app.py | |
+| 13.11.2026 | Problems in VS Code, Einrichtung am Laptop, Fehler beim Erstellen der .env | Ursachen erklärt (kein .venv, Execution Policy, Werte ins Terminal statt in .env eingefügt), setup_env.py geschrieben (erzeugt SECRET_KEY und Passwort-Hash), load_dotenv(override=True) in app.py | |

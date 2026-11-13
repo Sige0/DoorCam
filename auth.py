@@ -1,4 +1,5 @@
 import os
+import time
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user
@@ -33,12 +34,13 @@ def login():
             login_user(User(username))
             return redirect(url_for("index"))
 
+        time.sleep(1)  # slow down password guessing
         flash("Benutzername oder Passwort falsch")
 
     return render_template("login.html")
 
 
-@bp.route("/logout")
+@bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
     logout_user()

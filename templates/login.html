@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>DoorCam</h1>
     <form method="post" class="login">
+        <h1>DoorCam</h1>
         {% for msg in get_flashed_messages() %}
             <p class="error">{{ msg }}</p>
         {% endfor %}
-        <input name="username" placeholder="Benutzer" required autofocus>
-        <input name="password" type="password" placeholder="Passwort" required>
+        <input name="username" placeholder="Benutzer" autocomplete="username" required autofocus>
+        <input name="password" type="password" placeholder="Passwort" autocomplete="current-password" required>
         <button type="submit">Login</button>
     </form>
 </body>

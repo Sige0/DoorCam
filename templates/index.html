@@ -7,7 +7,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>DoorCam</h1>
-    <img src="{{ url_for('stream') }}" alt="Livebild">
+    <header>
+        <div>
+            <span class="title">DoorCam</span>
+            <span class="live">Live</span>
+        </div>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+            <button type="submit">Logout</button>
+        </form>
+    </header>
+    <main>
+        <img src="{{ url_for('stream') }}" alt="Livebild">
+    </main>
 </body>
 </html>
