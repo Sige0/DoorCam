@@ -3,7 +3,7 @@ import time
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, Response, render_template
+from flask import Flask, Response, abort, render_template, request
 from flask_login import login_required
 
 from auth import bp as auth_bp, login_manager
@@ -41,6 +41,17 @@ def generate_frames():
         time.sleep(1 / 15)  # ~15 fps is enough
 
 
+def stream_response():
+    return Response(generate_frames(),
+                    mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+def local_only():
+    # display pages have no login, so only the Pi itself may open them
+    if request.remote_addr not in ("127.0.0.1", "::1"):
+        abort(403)
+
+
 @app.after_request
 def security_headers(response):
     response.headers["X-Frame-Options"] = "DENY"  # no embedding in other sites
@@ -57,8 +68,19 @@ def index():
 @app.route("/stream")
 @login_required
 def stream():
-    return Response(generate_frames(),
-                    mimetype="multipart/x-mixed-replace; boundary=frame")
+    return stream_response()
+
+
+@app.route("/display")
+def display():
+    local_only()
+    return render_template("display.html")
+
+
+@app.route("/display/stream")
+def display_stream():
+    local_only()
+    return stream_response()
 
 
 if __name__ == "__main__":

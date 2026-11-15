@@ -16,3 +16,4 @@ Verwendetes Werkzeug: Claude Code (Claude Opus 5.5) in VS Code
 | 15.11.2026 | Gelöschte Dateien wiederherstellen | Befehle gezeigt, um .env.example und ki-nutzung.md aus altem Commit zurückzuholen | |
 | 15.11.2026 | Pi: "No module named dotenv", Zugriff über Hostname, Autostart | Ursache erklärt (keine .venv auf dem Pi), mDNS/doorcam.local erklärt, Code für doorcam.service, kiosk.py, Kiosk-Autostart und "Angemeldet bleiben" vorgeschlagen und erklärt | |
 | 15.11.2026 | doorcam.service nicht gefunden | Ursache erklärt (Dateien nie committet, ki-nutzung.md mitgelöscht), Dateien aus der Anleitung erstellt (deploy/, kiosk.py, Remember-Me), ki-nutzung.md wiederhergestellt, Commit und Push | |
+| 15.11.2026 | Display ohne Login, nur Bild, für 5"-Bildschirm optimieren | Plan vorgeschlagen, /display und /display/stream (nur vom Pi selbst erreichbar) in app.py, display.html, display.css, kiosk.py öffnet /display, getestet (lokal 200, aus dem Netz 403) | |

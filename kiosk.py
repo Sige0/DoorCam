@@ -2,7 +2,7 @@ import subprocess
 import time
 import urllib.request
 
-URL = "http://localhost:5000"
+URL = "http://127.0.0.1:5000"
 
 # wait until the web app is up
 while True:
@@ -18,5 +18,7 @@ subprocess.run([
     "--noerrdialogs",
     "--disable-infobars",
     "--no-first-run",
-    URL,
+    "--disable-pinch",  # no zooming on the touch screen
+    "--overscroll-history-navigation=0",  # no swipe back
+    URL + "/display",
 ])
