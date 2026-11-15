@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, Response, render_template
@@ -17,6 +18,9 @@ if not secret or secret == "change-me":
 app = Flask(__name__)
 app.config["SECRET_KEY"] = secret
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
+app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
+app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
 
 login_manager.init_app(app)
 app.register_blueprint(auth_bp)
