@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -7,8 +8,19 @@ from flask_login import login_required
 
 from auth import bp as auth_bp, login_manager
 from camera import Camera
+from motion import MotionDetector
+from recorder import Recorder
 
 load_dotenv(override=True)  # .env wins over old terminal variables
+
+# log to console and file, with date and time
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler(), logging.FileHandler("doorcam.log", encoding="utf-8")],
+)
+logging.getLogger("werkzeug").setLevel(logging.WARNING)  # hide request lines
 
 secret = os.getenv("SECRET_KEY")
 if not secret or secret == "change-me":
@@ -23,6 +35,12 @@ app.register_blueprint(auth_bp)
 
 camera = Camera(os.getenv("CAMERA_SOURCE", "0"))
 camera.start()
+
+motion = MotionDetector(camera)
+motion.start()
+
+recorder = Recorder(camera, motion)
+recorder.start()
 
 
 def generate_frames():
