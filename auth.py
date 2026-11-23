@@ -31,7 +31,8 @@ def login():
         pw_hash = os.getenv("LOGIN_PASSWORD_HASH", "")
 
         if username == os.getenv("LOGIN_USER") and pw_hash and check_password_hash(pw_hash, password):
-            login_user(User(username))
+            remember = request.form.get("remember") == "on"
+            login_user(User(username), remember=remember)
             return redirect(url_for("index"))
 
         time.sleep(1)  # slow down password guessing

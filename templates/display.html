@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DoorCam Display</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='display.css') }}">
+</head>
+<body>
+    <img id="cam" src="{{ url_for('display_stream') }}" alt="">
+
+    <script>
+        // reconnect if the stream breaks, e.g. after a service restart
+        const cam = document.getElementById("cam");
+        cam.onerror = () => {
+            setTimeout(() => {
+                cam.src = "{{ url_for('display_stream') }}?t=" + Date.now();
+            }, 2000);
+        };
+    </script>
+</body>
+</html>

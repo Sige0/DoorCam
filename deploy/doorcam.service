@@ -1,0 +1,15 @@
+[Unit]
+Description=DoorCam web app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin/DoorCam
+ExecStart=/home/admin/DoorCam/.venv/bin/python app.py
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=DoorCam Kiosk
+Exec=/usr/bin/python3 /home/admin/DoorCam/kiosk.py
