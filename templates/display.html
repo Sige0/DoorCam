@@ -9,6 +9,20 @@
 <body>
     <img id="cam" src="{{ url_for('display_stream') }}" alt="">
 
+    <details class="menu" id="menu">
+        <summary aria-label="Menü">•••</summary>
+        <div class="menu-panel">
+            <form method="post" action="{{ url_for('save_clip') }}">
+                <button type="submit">Letzte {{ clip_seconds }} s speichern</button>
+            </form>
+            <a href="{{ url_for('recordings') }}">Aufnahmen</a>
+        </div>
+    </details>
+
+    {% for msg in get_flashed_messages() %}
+        <p class="toast">{{ msg }}</p>
+    {% endfor %}
+
     <script>
         // reconnect if the stream breaks, e.g. after a service restart
         const cam = document.getElementById("cam");
@@ -17,6 +31,10 @@
                 cam.src = "{{ url_for('display_stream') }}?t=" + Date.now();
             }, 2000);
         };
+
+        // tap on the image closes the menu
+        const menu = document.getElementById("menu");
+        cam.onclick = () => menu.open = false;
     </script>
 </body>
 </html>

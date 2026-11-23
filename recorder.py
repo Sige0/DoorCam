@@ -55,6 +55,43 @@ def list_recordings():
     return recordings
 
 
+def delete_recording(name):
+    """Deletes a video and its snapshot."""
+    if not is_recording_file(name) or not name.endswith(".mp4"):
+        return False
+
+    path = os.path.join(RECORDINGS_DIR, name)
+    image = path.replace(".mp4", ".jpg")
+    try:
+        os.remove(path)
+        if os.path.exists(image):
+            os.remove(image)
+    except OSError as error:
+        log.error("Could not delete %s: %s", name, error)
+        return False
+
+    log.info("Deleted %s", name)
+    return True
+
+
+def _format_size(size):
+    if size >= 1024 ** 3:
+        return f"{size / 1024 ** 3:.1f} GB"
+    return f"{size / 1024 ** 2:.0f} MB"
+
+
+def storage_info():
+    disk = shutil.disk_usage(RECORDINGS_DIR)
+    recordings = sum(entry.stat().st_size for entry in os.scandir(RECORDINGS_DIR)
+                     if is_recording_file(entry.name))
+    return {
+        "recordings": _format_size(recordings),
+        "free": _format_size(disk.free),
+        "total": _format_size(disk.total),
+        "percent": round(disk.used / disk.total * 100),
+    }
+
+
 def _start_ffmpeg(path):
     """Starts ffmpeg, which turns JPEGs from stdin into a browser-ready MP4."""
     cmd = [
@@ -102,11 +139,12 @@ class Recorder:
         self.motion = motion
         self.pre_seconds = float(os.getenv("RECORD_PRE_SECONDS", "5"))
         self.max_seconds = float(os.getenv("RECORD_MAX_SECONDS", "120"))
-        clip_seconds = float(os.getenv("CLIP_SECONDS", "30"))
+        self.clip_seconds = int(os.getenv("CLIP_SECONDS", "60"))
 
         # ring buffer: oldest frame drops out when full
-        self.buffer = deque(maxlen=int(clip_seconds * RECORD_FPS))
+        self.buffer = deque(maxlen=self.clip_seconds * RECORD_FPS)
         self.lock = threading.Lock()
+        self.saving_clip = False
         self.ffmpeg = None  # running ffmpeg while recording
         self.path = None
         self.start_time = 0
@@ -119,11 +157,15 @@ class Recorder:
         threading.Thread(target=self._loop, daemon=True).start()
 
     def save_clip(self):
-        """Saves the whole buffer (last CLIP_SECONDS) as a video."""
+        """Saves the last CLIP_SECONDS as a video. False if not possible right now."""
         with self.lock:
+            if self.saving_clip or not self.buffer:
+                return False
+            self.saving_clip = True
             frames = list(self.buffer)
-        if frames:
-            threading.Thread(target=self._write_clip, args=(frames,), daemon=True).start()
+
+        threading.Thread(target=self._write_clip, args=(frames,), daemon=True).start()
+        return True
 
     def _loop(self):
         next_time = time.time()
@@ -171,12 +213,15 @@ class Recorder:
         self.ffmpeg = None
 
     def _write_clip(self, frames):
-        path = os.path.join(RECORDINGS_DIR, _timestamp() + "_manual.mp4")
-        _save_snapshot(path, frames[-1])
-        process = _start_ffmpeg(path)
-        for jpeg in frames:
-            _write(process, jpeg)
-        _finish_ffmpeg(process, path)
+        try:
+            path = os.path.join(RECORDINGS_DIR, _timestamp() + "_manual.mp4")
+            _save_snapshot(path, frames[-1])
+            process = _start_ffmpeg(path)
+            for jpeg in frames:
+                _write(process, jpeg)
+            _finish_ffmpeg(process, path)
+        finally:
+            self.saving_clip = False
 
 
 if __name__ == "__main__":
@@ -198,5 +243,5 @@ if __name__ == "__main__":
     rec.start()
 
     while True:
-        input("Recording on motion. Enter = save last 30 s, Ctrl+C = stop\n")
+        input("Recording on motion. Enter = save clip, Ctrl+C = stop\n")
         rec.save_clip()

@@ -2,15 +2,18 @@ import logging
 import os
 import time
 from datetime import timedelta
+from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, Response, abort, jsonify, render_template, request, send_from_directory
-from flask_login import login_required
+from flask import (Flask, Response, abort, flash, jsonify, redirect, render_template, request,
+                   send_from_directory, url_for)
+from flask_login import current_user, login_required
 
 from auth import bp as auth_bp, login_manager
 from camera import Camera
 from motion import MotionDetector
-from recorder import RECORDINGS_DIR, Recorder, is_recording_file, list_recordings
+from recorder import (RECORDINGS_DIR, Recorder, delete_recording, is_recording_file,
+                      list_recordings, storage_info)
 
 load_dotenv(override=True)  # .env wins over old terminal variables
 
@@ -64,10 +67,27 @@ def stream_response():
                     mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
+def is_kiosk():
+    """True for the browser on the Pi itself, the display has no login."""
+    local = request.remote_addr == "127.0.0.1"
+    own_host = request.host.split(":")[0] == "127.0.0.1"  # blocks DNS rebinding
+    fetch_site = request.headers.get("Sec-Fetch-Site", "none")
+    same_site = fetch_site in ("none", "same-origin")  # blocks other websites
+    return local and own_host and same_site
+
+
 def local_only():
-    # display pages have no login, so only the Pi itself may open them
-    if request.remote_addr not in ("127.0.0.1", "::1"):
+    if not is_kiosk():
         abort(403)
+
+
+def login_or_kiosk(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if is_kiosk() or current_user.is_authenticated:
+            return view(*args, **kwargs)
+        return login_manager.unauthorized()
+    return wrapper
 
 
 @app.after_request
@@ -80,7 +100,7 @@ def security_headers(response):
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html")
+    return render_template("index.html", clip_seconds=recorder.clip_seconds)
 
 
 @app.route("/stream")
@@ -96,13 +116,14 @@ def status():
 
 
 @app.route("/recordings")
-@login_required
+@login_or_kiosk
 def recordings():
-    return render_template("recordings.html", recordings=list_recordings())
+    return render_template("recordings.html", recordings=list_recordings(),
+                           storage=storage_info(), kiosk=is_kiosk())
 
 
 @app.route("/recordings/<name>")
-@login_required
+@login_or_kiosk
 def recording_file(name):
     # only our own file names, blocks path traversal
     if not is_recording_file(name):
@@ -112,10 +133,30 @@ def recording_file(name):
     return send_from_directory(os.path.abspath(RECORDINGS_DIR), name, as_attachment=download)
 
 
+@app.route("/recordings/<name>/delete", methods=["POST"])
+@login_or_kiosk
+def delete_file(name):
+    if delete_recording(name):
+        flash("Aufnahme gelöscht")
+    else:
+        flash("Aufnahme konnte nicht gelöscht werden")
+    return redirect(url_for("recordings"))
+
+
+@app.route("/clip", methods=["POST"])
+@login_or_kiosk
+def save_clip():
+    if recorder.save_clip():
+        flash("Wird gespeichert, erscheint gleich unter Aufnahmen")
+    else:
+        flash("Speichern ist gerade nicht möglich")
+    return redirect(url_for("display" if is_kiosk() else "index"))
+
+
 @app.route("/display")
 def display():
     local_only()
-    return render_template("display.html")
+    return render_template("display.html", clip_seconds=recorder.clip_seconds)
 
 
 @app.route("/display/stream")
