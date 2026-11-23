@@ -4,13 +4,13 @@ import time
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, Response, abort, render_template, request
+from flask import Flask, Response, abort, jsonify, render_template, request, send_from_directory
 from flask_login import login_required
 
 from auth import bp as auth_bp, login_manager
 from camera import Camera
 from motion import MotionDetector
-from recorder import Recorder
+from recorder import RECORDINGS_DIR, Recorder, is_recording_file, list_recordings
 
 load_dotenv(override=True)  # .env wins over old terminal variables
 
@@ -87,6 +87,29 @@ def index():
 @login_required
 def stream():
     return stream_response()
+
+
+@app.route("/status")
+@login_required
+def status():
+    return jsonify(motion=motion.active)
+
+
+@app.route("/recordings")
+@login_required
+def recordings():
+    return render_template("recordings.html", recordings=list_recordings())
+
+
+@app.route("/recordings/<name>")
+@login_required
+def recording_file(name):
+    # only our own file names, blocks path traversal
+    if not is_recording_file(name):
+        abort(404)
+
+    download = request.args.get("download") == "1"
+    return send_from_directory(os.path.abspath(RECORDINGS_DIR), name, as_attachment=download)
 
 
 @app.route("/display")

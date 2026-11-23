@@ -11,13 +11,35 @@
         <div>
             <span class="title">DoorCam</span>
             <span class="live">Live</span>
+            <span class="motion" id="motion"></span>
         </div>
-        <form method="post" action="{{ url_for('auth.logout') }}">
-            <button type="submit">Logout</button>
-        </form>
+        <nav>
+            <a href="{{ url_for('recordings') }}">Aufnahmen</a>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+                <button type="submit">Logout</button>
+            </form>
+        </nav>
     </header>
     <main>
         <img src="{{ url_for('stream') }}" alt="Livebild">
     </main>
+
+    <script>
+        const motion = document.getElementById("motion");
+
+        async function updateMotion() {
+            try {
+                const response = await fetch("{{ url_for('status') }}");
+                const data = await response.json();
+                motion.textContent = data.motion ? "Bewegung erkannt" : "Keine Bewegung";
+                motion.classList.toggle("active", data.motion);
+            } catch {
+                motion.textContent = "";  // app not reachable
+            }
+        }
+
+        updateMotion();
+        setInterval(updateMotion, 2000);
+    </script>
 </body>
 </html>

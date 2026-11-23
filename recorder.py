@@ -1,20 +1,58 @@
 import logging
 import os
+import re
 import shutil
 import subprocess
 import threading
 import time
 from collections import deque
 from datetime import datetime
+from functools import lru_cache
+
+import cv2
 
 RECORD_FPS = 15
 RECORDINGS_DIR = "recordings"
+TIME_FORMAT = "%Y-%m-%d_%H-%M-%S"
+FILE_NAME = re.compile(r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(_manual)?\.(mp4|jpg)")
 
 log = logging.getLogger(__name__)
 
 
 def _timestamp():
-    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return datetime.now().strftime(TIME_FORMAT)
+
+
+def is_recording_file(name):
+    return FILE_NAME.fullmatch(name) is not None
+
+
+@lru_cache(maxsize=512)  # finished videos never change
+def _video_seconds(path):
+    video = cv2.VideoCapture(path)
+    frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    video.release()
+    return round(frames / fps) if fps else 0
+
+
+def list_recordings():
+    """Returns all finished videos, newest first."""
+    recordings = []
+    for name in sorted(os.listdir(RECORDINGS_DIR), reverse=True):
+        if not name.endswith(".mp4") or not is_recording_file(name):
+            continue
+
+        seconds = _video_seconds(os.path.join(RECORDINGS_DIR, name))
+        date = datetime.strptime(name[:19], TIME_FORMAT)
+        recordings.append({
+            "video": name,
+            "image": name.replace(".mp4", ".jpg"),
+            "date": date.strftime("%d.%m.%Y %H:%M:%S"),
+            "length": f"{seconds // 60}:{seconds % 60:02d}",
+            "manual": name.endswith("_manual.mp4"),
+        })
+    return recordings
 
 
 def _start_ffmpeg(path):

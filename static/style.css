@@ -55,6 +55,27 @@ header {
     background: #e5484d;
 }
 
+.motion {
+    margin-left: 10px;
+    font-size: 13px;
+    color: #a0a0a0;
+}
+
+.motion.active {
+    color: #f5a524;
+    font-weight: 600;
+}
+
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+a {
+    color: #e6e6e6;
+}
+
 /* live image, fits any screen size */
 main {
     display: flex;
@@ -68,6 +89,53 @@ main img {
     max-height: calc(100dvh - 52px - 24px);
     border-radius: 6px;
     background: #000;
+}
+
+/* recordings page */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    align-items: start;
+    gap: 12px;
+}
+
+.recording {
+    overflow: hidden;
+    background: #1b1b1b;
+    border: 1px solid #262626;
+    border-radius: 6px;
+}
+
+.recording video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+}
+
+.recording-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+}
+
+.recording-info small {
+    display: block;
+    margin-top: 2px;
+    color: #a0a0a0;
+}
+
+.empty {
+    color: #a0a0a0;
+}
+
+/* small screens */
+@media (max-width: 520px) {
+    .live {
+        display: none;
+    }
 }
 
 /* login page */

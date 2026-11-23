@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DoorCam Aufnahmen</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <span class="title">Aufnahmen</span>
+        <nav>
+            <a href="{{ url_for('index') }}">Live</a>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+                <button type="submit">Logout</button>
+            </form>
+        </nav>
+    </header>
+    <main class="gallery">
+        {% for rec in recordings %}
+            <article class="recording">
+                <video controls preload="none"
+                       poster="{{ url_for('recording_file', name=rec.image) }}"
+                       src="{{ url_for('recording_file', name=rec.video) }}"></video>
+                <div class="recording-info">
+                    <div>
+                        <strong>{{ rec.date }}</strong>
+                        <small>{{ rec.length }} · {{ "Manuell" if rec.manual else "Bewegung" }}</small>
+                    </div>
+                    <a href="{{ url_for('recording_file', name=rec.video, download=1) }}">Download</a>
+                </div>
+            </article>
+        {% else %}
+            <p class="empty">Noch keine Aufnahmen vorhanden.</p>
+        {% endfor %}
+    </main>
+</body>
+</html>
