@@ -11,6 +11,7 @@ from flask_login import current_user, login_required
 
 from auth import bp as auth_bp, login_manager
 from camera import Camera
+from cleanup import Cleanup
 from motion import MotionDetector
 from recorder import (RECORDINGS_DIR, Recorder, delete_recording, is_recording_file,
                       list_recordings, storage_info)
@@ -47,6 +48,10 @@ motion = MotionDetector(camera)
 motion.start()
 
 recorder = Recorder(camera, motion)
+
+cleanup = Cleanup()
+cleanup.start()  # before recorder.start(), removes leftovers of old recordings
+
 recorder.start()
 
 
@@ -119,7 +124,8 @@ def status():
 @login_or_kiosk
 def recordings():
     return render_template("recordings.html", recordings=list_recordings(),
-                           storage=storage_info(), kiosk=is_kiosk())
+                           storage=storage_info(), kiosk=is_kiosk(),
+                           retention_minutes=cleanup.retention_minutes)
 
 
 @app.route("/recordings/<name>")

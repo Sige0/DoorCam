@@ -55,7 +55,7 @@ def list_recordings():
     return recordings
 
 
-def delete_recording(name):
+def delete_recording(name, reason="manual"):
     """Deletes a video and its snapshot."""
     if not is_recording_file(name) or not name.endswith(".mp4"):
         return False
@@ -70,7 +70,7 @@ def delete_recording(name):
         log.error("Could not delete %s: %s", name, error)
         return False
 
-    log.info("Deleted %s", name)
+    log.info("Deleted %s (%s)", name, reason)
     return True
 
 

@@ -16,7 +16,8 @@ Vertiefungsarbeit (VA) von Siro Cahenzli, ICT-Fachmann EFZ (Systemtechnik), TBZ,
 
 - Aufnahme bei Bewegung: 5 s Vorlauf (vor der Bewegung) und 5 s Nachlauf (nach der letzten Bewegung)
 - Website: Aufnahmen als Galerie, Videos können heruntergeladen werden
-- Manueller Clip: Auf dem Display und auf der Website kann man per Knopf die letzten 30 s speichern
+- Manueller Clip: Auf dem Display und auf der Website kann man per Knopf die letzten 60 s speichern (`CLIP_SECONDS`)
+- Löschen (24.11.2026): alles älter als 24 h (`RETENTION_MINUTES`), bei wenig Speicher (`MIN_FREE_GB`) zuerst die ältesten. In `cleanup.py`
 
 ## Hardware
 
@@ -32,13 +33,15 @@ Vertiefungsarbeit (VA) von Siro Cahenzli, ICT-Fachmann EFZ (Systemtechnik), TBZ,
 - Python 3, Flask (Website), OpenCV (Kamera, Bewegung), Flask-Login (Login)
 - Passwörter nur als Hash (`werkzeug.security`)
 - Geheimnisse (Login, SMTP, SECRET_KEY) in `.env`, geladen mit python-dotenv (`override=True`). Nie ins Repo, im Repo liegt nur `.env.example`. `setup_env.py` erzeugt SECRET_KEY und Passwort-Hash
-- Nur ein Prozess öffnet die Kamera. Die Flask-App liest die Bilder in einem eigenen Thread und verteilt sie. Das Display zeigt die Website im Kiosk-Modus von Chromium (mit Login, funktioniert) und öffnet die Kamera nicht selbst
+- Nur ein Prozess öffnet die Kamera. Die Flask-App liest die Bilder in einem eigenen Thread und verteilt sie. Das Display zeigt `/display` im Kiosk-Modus von Chromium (`kiosk.py`) und öffnet die Kamera nicht selbst
+- Display ohne Login: nur für den Browser auf dem Pi selbst, geprüft mit `is_kiosk()` in `app.py` (IP 127.0.0.1, Host-Header, `Sec-Fetch-Site`)
 - Website nur im lokalen Netz. Keine Portweiterleitung, kein Zugriff von aussen
 - Kein Ton aufnehmen, Mikrofon der C270 wird nicht verwendet (rechtliche Gründe)
 - Entwickelt auf dem Windows-PC/Laptop in VS Code, läuft auf dem Pi (`git pull`)
   - Am Laptop gibt es `python` nur im `.venv` (sonst nur `py`)
   - Am PC gibt es keine C270: `CAMERA_SOURCE` in `.env` (`0` = Webcam, `test` = Testbild)
-- Später läuft die App als systemd-Dienst
+- Auf dem Pi läuft die App als systemd-Dienst (`deploy/doorcam.service`), Log mit `journalctl -u doorcam -f` und in `doorcam.log`
+- Aufnahmen als H.264-MP4 mit ffmpeg (libx264, ultrafast), der Pi 5 hat keinen Hardware-Encoder
 
 ## Code-Stil
 
@@ -56,10 +59,13 @@ Vertiefungsarbeit (VA) von Siro Cahenzli, ICT-Fachmann EFZ (Systemtechnik), TBZ,
 app.py            # Flask-App, Routen
 camera.py         # Kamera-Thread, liefert das aktuelle Bild
 auth.py           # Login
-motion.py         # Bewegungserkennung (KW47)
-recorder.py       # Aufnahmen (KW47), Löschen nach 24h (KW48)
+motion.py         # Bewegungserkennung
+recorder.py       # Aufnahmen, Galerie-Liste, manuelles Löschen
+cleanup.py        # automatisches Löschen (alt / wenig Speicher)
 notify.py         # E-Mail im Abwesend-Modus (KW48)
+kiosk.py          # startet Chromium im Kiosk-Modus auf dem Display
 setup_env.py      # erzeugt .env
+deploy/           # systemd-Dienst, Autostart Kiosk
 templates/        # HTML
 static/           # CSS
 ```
@@ -68,7 +74,7 @@ static/           # CSS
 
 - [x] KW45: Pi eingerichtet, Kamera und Display angeschlossen, SSH läuft
 - [x] KW46: Livebild als MJPEG-Stream, Website mit Login, auf dem Pi getestet
-- [ ] KW47: Bewegungserkennung und Aufnahme
+- [x] KW47: Bewegungserkennung, Aufnahme, Galerie, manueller Clip, Kiosk-Display
 - [ ] KW48: Abwesend-Modus mit E-Mail, Aufnahmen nach 24h automatisch löschen
 - [ ] KW49: Testen und Fehler beheben (2. Zwischengespräch am 3.12.)
 - [ ] KW50/51: Dokumentation, Abgabe am 17.12.2026

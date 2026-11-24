@@ -24,7 +24,9 @@
     <section class="storage">
         <div>
             <strong>Speicher</strong>
-            <span>Aufnahmen {{ storage.recordings }} · frei {{ storage.free }} von {{ storage.total }}</span>
+            <span>Aufnahmen {{ storage.recordings }} · frei {{ storage.free }} von {{ storage.total }}
+                · gelöscht nach
+                {% if retention_minutes % 60 == 0 %}{{ retention_minutes // 60 }} h{% else %}{{ retention_minutes }} min{% endif %}</span>
         </div>
         <progress max="100" value="{{ storage.percent }}">{{ storage.percent }} %</progress>
     </section>
