@@ -46,6 +46,7 @@ class Notifier:
         self.motion = motion
         self.away = away
         self.cooldown = float(os.getenv("MAIL_COOLDOWN_MINUTES", "5")) * 60
+        self.photo_delay = float(os.getenv("MAIL_PHOTO_DELAY_SECONDS", "1"))
         self.last_mail = 0
         self.was_active = False
 
@@ -67,12 +68,15 @@ class Notifier:
             return
 
         self.last_mail = now
-        jpeg = self.camera.get_jpeg()
         time_text = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         # own thread, a slow or failing mail never stops camera or recording
-        threading.Thread(target=self._send, args=(jpeg, time_text), daemon=True).start()
+        threading.Thread(target=self._send, args=(time_text,), daemon=True).start()
 
-    def _send(self, jpeg, time_text):
+    def _send(self, time_text):
+        # wait a moment, so the person is fully in the picture
+        time.sleep(self.photo_delay)
+        jpeg = self.camera.get_jpeg()
+
         subject = f"DoorCam: Bewegung am {time_text}"
         text = (f"Die DoorCam hat am {time_text} eine Bewegung erkannt, "
                 "während der Abwesend-Modus aktiv war.\n\n"
