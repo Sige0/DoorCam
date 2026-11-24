@@ -5,3 +5,5 @@ __pycache__/
 recordings/
 snapshot.jpg
 doorcam.log
+state.json
+state.json.tmp

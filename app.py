@@ -10,6 +10,7 @@ from flask import (Flask, Response, abort, flash, jsonify, redirect, render_temp
 from flask_login import current_user, login_required
 
 from auth import bp as auth_bp, login_manager
+from away import AwayMode
 from camera import Camera
 from cleanup import Cleanup
 from motion import MotionDetector
@@ -53,6 +54,8 @@ cleanup = Cleanup()
 cleanup.start()  # before recorder.start(), removes leftovers of old recordings
 
 recorder.start()
+
+away = AwayMode()
 
 
 def generate_frames():
@@ -105,7 +108,7 @@ def security_headers(response):
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html", clip_seconds=recorder.clip_seconds)
+    return render_template("index.html", clip_seconds=recorder.clip_seconds, away_on=away.is_on())
 
 
 @app.route("/stream")
@@ -115,9 +118,21 @@ def stream():
 
 
 @app.route("/status")
-@login_required
+@login_or_kiosk
 def status():
-    return jsonify(motion=motion.active)
+    return jsonify(motion=motion.active, away=away.status())
+
+
+@app.route("/away", methods=["POST"])
+@login_required  # only the website, not the display
+def set_away():
+    if request.form.get("on") == "1":
+        away.turn_on()
+        flash(f"Abwesend-Modus startet in {away.delay} s")
+    else:
+        away.turn_off()
+        flash("Abwesend-Modus ausgeschaltet")
+    return redirect(url_for("index"))
 
 
 @app.route("/recordings")

@@ -42,8 +42,12 @@ class Cleanup:
 
     def _loop(self):
         while True:
-            self._delete_old()
-            self._free_space()
+            try:
+                self._delete_old()
+                self._free_space()
+            except Exception:
+                # one error must not stop the cleanup forever
+                log.exception("Cleanup failed")
             time.sleep(CHECK_SECONDS)
 
     def _delete_old(self):

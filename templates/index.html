@@ -12,8 +12,18 @@
             <span class="title">DoorCam</span>
             <span class="live">Live</span>
             <span class="motion" id="motion"></span>
+            <span class="away" id="away" hidden></span>
         </div>
         <nav>
+            <form method="post" action="{{ url_for('set_away') }}">
+                {% if away_on %}
+                    <input type="hidden" name="on" value="0">
+                    <button class="away-button on" type="submit">Abwesend ausschalten</button>
+                {% else %}
+                    <input type="hidden" name="on" value="1">
+                    <button class="away-button" type="submit">Abwesend einschalten</button>
+                {% endif %}
+            </form>
             <form method="post" action="{{ url_for('save_clip') }}">
                 <button type="submit">Letzte {{ clip_seconds }} s speichern</button>
             </form>
@@ -33,20 +43,27 @@
 
     <script>
         const motion = document.getElementById("motion");
+        const away = document.getElementById("away");
 
-        async function updateMotion() {
+        async function updateStatus() {
             try {
                 const response = await fetch("{{ url_for('status') }}");
                 const data = await response.json();
                 motion.textContent = data.motion ? "Bewegung erkannt" : "Keine Bewegung";
                 motion.classList.toggle("active", data.motion);
+
+                away.hidden = !data.away.on;
+                away.classList.toggle("active", data.away.active);
+                away.textContent = data.away.active
+                    ? "Abwesend aktiv"
+                    : `Abwesend in ${data.away.seconds_left} s`;
             } catch {
                 motion.textContent = "";  // app not reachable
             }
         }
 
-        updateMotion();
-        setInterval(updateMotion, 2000);
+        updateStatus();
+        setInterval(updateStatus, 1000);
     </script>
 </body>
 </html>

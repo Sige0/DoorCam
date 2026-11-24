@@ -66,6 +66,31 @@ header {
     font-weight: 600;
 }
 
+.away {
+    margin-left: 10px;
+    padding: 3px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+    background: #f5a524;
+    border-radius: 999px;
+}
+
+.away.active {
+    color: #fff;
+    background: #d93036;
+}
+
+.away[hidden] {
+    display: none;
+}
+
+.away-button.on {
+    color: #fff;
+    background: #d93036;
+    border-color: #d93036;
+}
+
 header nav {
     display: flex;
     align-items: center;

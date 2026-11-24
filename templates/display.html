@@ -19,6 +19,8 @@
         </div>
     </details>
 
+    <div class="away" id="away" hidden></div>
+
     {% for msg in get_flashed_messages() %}
         <p class="toast">{{ msg }}</p>
     {% endfor %}
@@ -35,6 +37,26 @@
         // tap on the image closes the menu
         const menu = document.getElementById("menu");
         cam.onclick = () => menu.open = false;
+
+        // away mode badge, top right
+        const away = document.getElementById("away");
+
+        async function updateStatus() {
+            try {
+                const response = await fetch("{{ url_for('status') }}");
+                const data = await response.json();
+                away.hidden = !data.away.on;
+                away.classList.toggle("active", data.away.active);
+                away.textContent = data.away.active
+                    ? "Abwesend aktiv"
+                    : `Abwesend in ${data.away.seconds_left} s`;
+            } catch {
+                // app restarting, try again next time
+            }
+        }
+
+        updateStatus();
+        setInterval(updateStatus, 1000);
     </script>
 </body>
 </html>
