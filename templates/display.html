@@ -16,6 +16,9 @@
                 <button type="submit">Letzte {{ clip_seconds }} s speichern</button>
             </form>
             <a href="{{ url_for('recordings') }}">Aufnahmen</a>
+            <form method="post" action="{{ url_for('display_away_on') }}" id="away-on">
+                <button type="submit">Abwesend einschalten</button>
+            </form>
         </div>
     </details>
 
@@ -40,12 +43,14 @@
 
         // away mode badge, top right
         const away = document.getElementById("away");
+        const awayOn = document.getElementById("away-on");
 
         async function updateStatus() {
             try {
                 const response = await fetch("{{ url_for('status') }}");
                 const data = await response.json();
                 away.hidden = !data.away.on;
+                awayOn.hidden = data.away.on;  // button only while off
                 away.classList.toggle("active", data.away.active);
                 away.textContent = data.away.active
                     ? "Abwesend aktiv"

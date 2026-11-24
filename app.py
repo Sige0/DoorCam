@@ -14,6 +14,7 @@ from away import AwayMode
 from camera import Camera
 from cleanup import Cleanup
 from motion import MotionDetector
+from notify import Notifier
 from recorder import (RECORDINGS_DIR, Recorder, delete_recording, is_recording_file,
                       list_recordings, storage_info)
 
@@ -56,6 +57,9 @@ cleanup.start()  # before recorder.start(), removes leftovers of old recordings
 recorder.start()
 
 away = AwayMode()
+
+notifier = Notifier(camera, motion, away)
+notifier.start()
 
 
 def generate_frames():
@@ -178,6 +182,14 @@ def save_clip():
 def display():
     local_only()
     return render_template("display.html", clip_seconds=recorder.clip_seconds)
+
+
+@app.route("/display/away", methods=["POST"])
+def display_away_on():
+    local_only()
+    away.turn_on()  # display can only turn it on, off needs the login
+    flash(f"Abwesend-Modus startet in {away.delay} s")
+    return redirect(url_for("display"))
 
 
 @app.route("/display/stream")
